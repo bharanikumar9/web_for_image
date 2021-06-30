@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block Content %}
+  <h2 class="card-title">Files</h2>
+   <table>
+     <thead>
+       <tr>
+         <th>Title</th>
+         <th>Uploaded File</th>
+       </tr>
+     </thead>
+     <tbody>
+       {% for file in files %}
+          <tr>
+            <td>{{ file.title }}</td>
+            <td>{{ file.title }}</td>
+          </tr>
+       {% end for %}
+     </tbody>
+   </table>
+{% endblock %}
