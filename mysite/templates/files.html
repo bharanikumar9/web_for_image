@@ -5,17 +5,19 @@
    <table>
      <thead>
        <tr>
-         <th>Title</th>
+         <th>{{title}}</th>
          <th>Uploaded File</th>
        </tr>
      </thead>
      <tbody>
-       {% for file in files %}
+       <!-- {% for file in files %}
           <tr>
             <td>{{ file.title }}</td>
             <td>{{ file.title }}</td>
           </tr>
-       {% end for %}
+       {% endfor %} -->
+       {% load static %} 
+       <img src="{% static 'ans.jpg' %}" alt="Girl in a jacket">
      </tbody>
    </table>
 {% endblock %}
