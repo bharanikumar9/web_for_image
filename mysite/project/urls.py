@@ -7,4 +7,5 @@ urlpatterns = [
     path('index', views.index, name='index'),
     path('files', views.files, name='files'),
     path('upload', views.upload_file, name='upload'),
+    path('upv',views.upload_vid,name='upload_vid'),
 ]

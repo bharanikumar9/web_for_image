@@ -1,7 +1,7 @@
 from .models import File
 from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
-
+from django.core.files.storage import FileSystemStorage
 # Create your views here.
 from django.http import HttpResponse
 
@@ -196,9 +196,12 @@ def run(file_name):
     draw_boxes(photo_filename, v_boxes, v_labels, v_scores)
 
 def handle_uploaded_file(f):
-    im1=Image.open(f);
-    im1.save("files/input.jpg")
+    im1=Image.open(f)
+    rgb_im = im1.convert('RGB')
+    rgb_im.save("files/input.jpg")
     run("input.jpg")
+
+
 class Home(TemplateView):
     template_name = 'home.html'
 
@@ -221,5 +224,24 @@ def upload_file(request):
     else:
         form = FileForm()
     return render(request,'upload.html',{
+        'form' : form
+    })
+
+def handle_vid(v):
+    fs = FileSystemStorage()
+    name = fs.save('vid.mp4',v)
+    return fs.url(name)
+
+def upload_vid(request):
+    if (request.method == 'POST') :
+        form = FileForm(request.POST,request.FILES)
+        if form.is_valid():
+            r = handle_vid(request.FILES['file'])
+            return render(request,'video.html',{
+                'url' : r
+            })
+    else:
+        form = FileForm()
+    return render(request,'upv.html',{
         'form' : form
     })
