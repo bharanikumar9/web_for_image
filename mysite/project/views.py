@@ -22,7 +22,7 @@ from keras.models import load_model, Model
 from keras.preprocessing.image import load_img, img_to_array
 from keras.backend import expand_dims
 from matplotlib.patches import Rectangle
-
+import cv2
 
 def load_image_pixels(filename, shape):
     image = load_img(filename)
@@ -157,14 +157,25 @@ def draw_boxes(filename, v_boxes, v_labels, v_scores):
     data = plt.imread(filename)
     plt.imshow(data)
     ax = plt.gca()
+    p=[]
     for i in range(len(v_boxes)):
         box = v_boxes[i]
         y1, x1, y2, x2 = box.ymin, box.xmin, box.ymax, box.xmax
         width, height = x2 - x1, y2 - y1
         rect = Rectangle((x1, y1), width, height, fill=False, color='red')
         ax.add_patch(rect)
-        label = "%s (%.3f)" % (v_labels[i], v_scores[i])
-        plt.text(x1, y1, label, color='white')
+        # label = "%s (%.3f)" % (v_labels[i], v_scores[i])
+        # plt.text(x1, y1, label, color='white')
+        if(v_labels[i]=="person"):
+            p.append([(x1+x2)/2,(y1+y2)/2,x2-x1,y2-y1])
+    for id in range(len(p)):
+        for id2 in range(id+1,len(p)):
+            # plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]])
+            # print((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2,1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3]),sep=" ")
+            if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
+                plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
+                print("222222222222")   
+    # plt.show()
     plt.savefig(os.path.join(BASE_DIR,"files/ans.jpg"))
 
 labels = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck",
@@ -178,7 +189,7 @@ labels = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", 
         "mouse","remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
         "refrigerator","book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"]
 
-model = load_model(os.path.join(BASE_DIR,"files/model.h5"))
+# model = load_model(os.path.join(BASE_DIR,"files/model.h5"))
 def run(file_name):
     input_w, input_h = 416, 416
     photo_filename = os.path.join(BASE_DIR,"files/"+file_name)
@@ -197,8 +208,8 @@ def run(file_name):
 
 def handle_uploaded_file(f):
     im1=Image.open(f)
-    rgb_im = im1.convert('RGB')
-    rgb_im.save("files/input.jpg")
+    # rgb_im = im1.convert('RGB')
+    im1.save("files/input.jpg")
     run("input.jpg")
 
 
@@ -230,7 +241,26 @@ def upload_file(request):
 def handle_vid(v):
     fs = FileSystemStorage()
     name = fs.save('vid.mp4',v)
-    return fs.url(name)
+    cap = cv2.VideoCapture(os.path.join(BASE_DIR,"files/"+name))
+    if (cap.isOpened() == False): 
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    framecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    out = cv2.VideoWriter(os.path.join(BASE_DIR,"files/output.avi"),cv2.VideoWriter_fourcc('M','J','P','G'), fps, (width,height))
+
+    while(True):
+        ret, frame = cap.read()
+        if ret == True: 
+            out.write(frame)
+        else:
+            break  
+    fs.delete(name)
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+    return fs.url("output.avi")
 
 def upload_vid(request):
     if (request.method == 'POST') :
