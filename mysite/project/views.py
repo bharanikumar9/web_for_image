@@ -11,6 +11,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import io
 
 from PIL import Image 
 import argparse
@@ -18,11 +19,13 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import numpy as np
+import keras
 from keras.models import load_model, Model
 from keras.preprocessing.image import load_img, img_to_array
 from keras.backend import expand_dims
 from matplotlib.patches import Rectangle
 import cv2
+import subprocess
 
 def load_image_pixels(filename, shape):
     image = load_img(filename)
@@ -32,6 +35,7 @@ def load_image_pixels(filename, shape):
     image = image.astype('float32')
     image /= 255.0
     image = expand_dims(image, 0)
+    # print(image.size())
     return image, width, height
 
 class BoundBox:
@@ -141,18 +145,18 @@ def get_boxes(boxes, labels, thresh):
     return v_boxes, v_labels, v_scores
 
 
-def draw_boxesd(data, v_boxes, v_labels, v_scores):
+# def draw_boxesd(data, v_boxes, v_labels, v_scores):
 
-    plt.imshow(data)
-    ax = plt.gca()
-    for i in range(len(v_boxes)):
-        box = v_boxes[i]
-        y1, x1, y2, x2 = box.ymin, box.xmin, box.ymax, box.xmax
-        width, height = x2 - x1, y2 - y1
-        rect = Rectangle((x1, y1), width, height, fill=False, color='red')
-        ax.add_patch(rect)
+#     plt.imshow(data)
+#     ax = plt.gca()
+#     for i in range(len(v_boxes)):
+#         box = v_boxes[i]
+#         y1, x1, y2, x2 = box.ymin, box.xmin, box.ymax, box.xmax
+#         width, height = x2 - x1, y2 - y1
+#         rect = Rectangle((x1, y1), width, height, fill=False, color='red')
+#         ax.add_patch(rect)
 
-    plt.imsave("")
+#     plt.imsave("")
 def draw_boxes(filename, v_boxes, v_labels, v_scores):
     data = plt.imread(filename)
     plt.imshow(data)
@@ -189,7 +193,7 @@ labels = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", 
         "mouse","remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
         "refrigerator","book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"]
 
-# model = load_model(os.path.join(BASE_DIR,"files/model.h5"))
+model = load_model(os.path.join(BASE_DIR,"files/model.h5"))
 def run(file_name):
     input_w, input_h = 416, 416
     photo_filename = os.path.join(BASE_DIR,"files/"+file_name)
@@ -238,6 +242,71 @@ def upload_file(request):
         'form' : form
     })
 
+def load_image_pixelsv(frame,shape):
+    cvt_image =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    im_pil = Image.fromarray(cvt_image)
+
+    image = im_pil.resize(shape)
+    image = img_to_array(image)
+    image = image.astype('float32')
+    image /= 255.0
+    image = expand_dims(image, 0)
+    return image
+
+def get_img_from_fig(fig, dpi=180):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi)
+    buf.seek(0)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(img_arr, 1)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    return img
+
+def draw_boxesv(frame, v_boxes, v_labels, v_scores,outvdo):
+    # data = plt.imread(filename)
+    plt.imshow(frame)
+    ax = plt.gca()
+    p=[]
+    for i in range(len(v_boxes)):
+        box = v_boxes[i]
+        y1, x1, y2, x2 = box.ymin, box.xmin, box.ymax, box.xmax
+        width, height = x2 - x1, y2 - y1
+        rect = Rectangle((x1, y1), width, height, fill=False, color='red')
+        ax.add_patch(rect)
+        # label = "%s (%.3f)" % (v_labels[i], v_scores[i])
+        # plt.text(x1, y1, label, color='white')
+    #     if(v_labels[i]=="person"):
+    #         p.append([(x1+x2)/2,(y1+y2)/2,x2-x1,y2-y1])
+    # for id in range(len(p)):
+    #     for id2 in range(id+1,len(p)):
+    #         # plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]])
+    #         # print((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2,1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3]),sep=" ")
+    #         if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
+    #             plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
+    #             print("222222222222")   
+    outvdo.write(get_img_from_fig( plt.figure()))
+    print("@!@!@!@@@22222")
+
+def runv(frame,width,height,outvdo):
+    input_w, input_h = 416, 416
+    temp=frame
+    # photo_filename = os.path.join(BASE_DIR,"files/"+file_name)
+    image= load_image_pixelsv(temp, (input_w, input_h))
+    image_w, image_h =width,height
+    yhat = model.predict(image,steps=2)
+    boxes = list()
+    for i in range(len(yhat)):
+        boxes += decode_netout(yhat[i][0], anchors[i], 0.6, input_h, input_w)
+    correct_yolo_boxes(boxes, image_h, image_w, input_h, input_w)
+    do_nms(boxes, 0.6)
+
+    v_boxes, v_labels, v_scores = get_boxes(boxes, labels, 0.6)
+    for i in range(len(v_boxes)):
+        print(v_labels[i], v_scores[i])
+    draw_boxesv(frame, v_boxes, v_labels, v_scores,outvdo)
+
 def handle_vid(v):
     fs = FileSystemStorage()
     name = fs.save('vid.mp4',v)
@@ -248,19 +317,24 @@ def handle_vid(v):
     framecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    out = cv2.VideoWriter(os.path.join(BASE_DIR,"files/output.avi"),cv2.VideoWriter_fourcc('M','J','P','G'), fps, (width,height))
+    outvdo = cv2.VideoWriter(os.path.join(BASE_DIR,"files/output.avi"),cv2.VideoWriter_fourcc('M','J','P','G'), fps, (width,height))
 
     while(True):
         ret, frame = cap.read()
         if ret == True: 
-            out.write(frame)
+            runv(frame,width,height,outvdo)
+
         else:
             break  
     fs.delete(name)
     cap.release()
-    out.release()
+    outvdo.release()
     cv2.destroyAllWindows()
+    # avi_file_path=os.path.join(BASE_DIR,"files/"+"output.avi")
+    # outputfile=os.path.join(BASE_DIR,"files/"+"output.mp4")
+    # subprocess.call(['ffmpeg', '-i', avi_file_path, outputfile])  
     return fs.url("output.avi")
+
 
 def upload_vid(request):
     if (request.method == 'POST') :
