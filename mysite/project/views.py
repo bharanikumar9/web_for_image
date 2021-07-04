@@ -229,18 +229,7 @@ def files(request):
         'title' : "modified"
     })
 
-def upload_file(request):
-    if request.method == 'POST':
-        form = FileForm(request.POST,request.FILES)
-        if form.is_valid():
-            # form.save()
-            handle_uploaded_file(request.FILES['file'])
-            return redirect('files')
-    else:
-        form = FileForm()
-    return render(request,'upload.html',{
-        'form' : form
-    })
+
 
 def load_image_pixelsv(frame,shape):
     cvt_image =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -349,3 +338,41 @@ def upload_vid(request):
     return render(request,'upv.html',{
         'form' : form
     })
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = FileForm(request.POST,request.FILES)
+        for k,v in request.POST.items():
+            print(k)
+            print(v)
+        print(request.POST)
+        print(request.POST.get('title'))
+        print(request.FILES)
+        if form.is_valid():
+            print("OKKKKK")
+            handle_uploaded_file(request.FILES['file'])
+            # form.save()
+            return redirect('files')
+    else:
+        form = FileForm()
+    return render(request,'upload.html',{
+    })
+
+def cam(request):
+    if(request.method == 'POST'):
+        form = FileForm(request.POST,request.FILES)
+        for k,v in request.POST.items():
+            print(k)
+            print(v)
+        print(request.POST)
+        print(request.POST.get('title'))
+        print(request.FILES)
+        if form.is_valid():
+            print("OKKKKK")
+            handle_uploaded_file(request.FILES['file'])
+            # form.save()
+            return redirect('files')
+        else:
+            form = FileForm()
+    return render(request,'cam.html',{
+        })

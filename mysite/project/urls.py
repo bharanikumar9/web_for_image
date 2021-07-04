@@ -8,4 +8,5 @@ urlpatterns = [
     path('files', views.files, name='files'),
     path('upload', views.upload_file, name='upload'),
     path('upv',views.upload_vid,name='upload_vid'),
+    path('cam',views.cam,name='cam'),
 ]
