@@ -117,11 +117,11 @@ def bbox_iou(box1, box2):
     return float(intersect_area) / union_area
 def do_nms(boxes, nms_thresh): 
     if len(boxes) > 0: 
-        nb_class = len(boxes[0].classes) 
+        pass 
     else: 
         return 
 
-    for c in range(nb_class): 
+    for c in range(1): 
         sorted_indices = np.argsort([-box.classes[c] for box in boxes]) 
  
         for i in range(len(sorted_indices)): 
@@ -178,27 +178,19 @@ def draw_boxes(filename, v_boxes, v_labels, v_scores):
             # print((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2,1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3]),sep=" ")
             if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
                 plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
-                print("222222222222")   
+                # print("222222222222")   
     # plt.show()
     plt.savefig(os.path.join(BASE_DIR,"files/ans.jpg"))
+    plt.close()
 
-labels = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck",
-        "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
-        "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe",
-        "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
-        "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
-        "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
-        "banana","apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut",
-        "cake","chair", "sofa", "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop",
-        "mouse","remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
-        "refrigerator","book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"]
+labels = ["person"]
 
 model = load_model(os.path.join(BASE_DIR,"files/model.h5"))
 def run(file_name):
     input_w, input_h = 416, 416
     photo_filename = os.path.join(BASE_DIR,"files/"+file_name)
     image, image_w, image_h = load_image_pixels(photo_filename, (input_w, input_h))
-    yhat = model.predict(image,steps=2)
+    yhat = model.predict(image)
     boxes = list()
     for i in range(len(yhat)):
         boxes += decode_netout(yhat[i][0], anchors[i], 0.6, input_h, input_w)
@@ -206,8 +198,8 @@ def run(file_name):
     do_nms(boxes, 0.6)
 
     v_boxes, v_labels, v_scores = get_boxes(boxes, labels, 0.6)
-    for i in range(len(v_boxes)):
-        print(v_labels[i], v_scores[i])
+    # for i in range(len(v_boxes)):
+    #     print(v_labels[i], v_scores[i])
     draw_boxes(photo_filename, v_boxes, v_labels, v_scores)
 
 def handle_uploaded_file(f):
@@ -284,7 +276,7 @@ def runv(frame,width,height,outvdo):
     # photo_filename = os.path.join(BASE_DIR,"files/"+file_name)
     image= load_image_pixelsv(temp, (input_w, input_h))
     image_w, image_h =width,height
-    yhat = model.predict(image,steps=2)
+    yhat = model.predict(image)
     boxes = list()
     for i in range(len(yhat)):
         boxes += decode_netout(yhat[i][0], anchors[i], 0.6, input_h, input_w)
@@ -292,8 +284,8 @@ def runv(frame,width,height,outvdo):
     do_nms(boxes, 0.6)
 
     v_boxes, v_labels, v_scores = get_boxes(boxes, labels, 0.6)
-    for i in range(len(v_boxes)):
-        print(v_labels[i], v_scores[i])
+    # for i in range(len(v_boxes)):
+    #     print(v_labels[i], v_scores[i])
     draw_boxesv(frame, v_boxes, v_labels, v_scores,outvdo)
 
 def handle_vid(v):
@@ -373,6 +365,8 @@ def cam(request):
             # form.save()
             return redirect('files')
         else:
+            print("NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
             form = FileForm()
+
     return render(request,'cam.html',{
         })
