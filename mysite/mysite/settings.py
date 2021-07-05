@@ -76,6 +76,10 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 MEDIA_URL = '/files/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'files')
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR,'static')
+]
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
