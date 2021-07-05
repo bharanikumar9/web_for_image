@@ -26,7 +26,7 @@ from keras.backend import expand_dims
 from matplotlib.patches import Rectangle
 import cv2
 import subprocess
-
+import glob
 def load_image_pixels(filename, shape):
     image = load_img(filename)
     width, height = image.size
@@ -267,8 +267,9 @@ def draw_boxesv(frame, v_boxes, v_labels, v_scores,outvdo):
     #         if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
     #             plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
     #             print("222222222222")   
-    outvdo.write(get_img_from_fig( plt.figure()))
-    print("@!@!@!@@@22222")
+    plt.savefig(os.path.join(BASE_DIR,"files/ff")+"/file%02d.png" % outvdo)
+    plt.close()
+
 
 def runv(frame,width,height,outvdo):
     input_w, input_h = 416, 416
@@ -298,23 +299,38 @@ def handle_vid(v):
     framecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    outvdo = cv2.VideoWriter(os.path.join(BASE_DIR,"files/output.avi"),cv2.VideoWriter_fourcc('M','J','P','G'), fps, (width,height))
 
+    i=0
     while(True):
-        ret, frame = cap.read()
-        if ret == True: 
-            runv(frame,width,height,outvdo)
-
-        else:
-            break  
+            ret, frame = cap.read()
+            if ret == True: 
+                # frame=cv2.resize(frame,(412,412))
+                runv(frame,width,height,i)
+                # outvdo.write(frame)
+                i=i+1
+                if(i%10==0):
+                    print(i)
+            else:
+                break
+            if(i==50):  #sonnand ga ikkada chudu, idid number of frames limit petesa
+                break  
     fs.delete(name)
     cap.release()
-    outvdo.release()
     cv2.destroyAllWindows()
-    # avi_file_path=os.path.join(BASE_DIR,"files/"+"output.avi")
-    # outputfile=os.path.join(BASE_DIR,"files/"+"output.mp4")
-    # subprocess.call(['ffmpeg', '-i', avi_file_path, outputfile])  
-    return fs.url("output.avi")
+    os.chdir(os.path.join(BASE_DIR,"files/ff"))
+    try:
+        os.remove("ans.mp4")
+    except:
+        print("Something went wrong")
+    subprocess.call([
+            'ffmpeg', '-framerate', str(fps), '-i', 'file%02d.png', '-r', '30', '-pix_fmt', 'yuv420p',
+            'ans.mp4'
+        ]) 
+    for file_name in glob.glob("*.png"):
+        os.remove(file_name)
+    os.chdir(os.path.join(BASE_DIR))
+
+    return fs.url("ff/ans.mp4")
 
 
 def upload_vid(request):
