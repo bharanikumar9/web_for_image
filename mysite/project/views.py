@@ -166,7 +166,7 @@ def draw_boxes(filename, v_boxes, v_labels, v_scores):
         box = v_boxes[i]
         y1, x1, y2, x2 = box.ymin, box.xmin, box.ymax, box.xmax
         width, height = x2 - x1, y2 - y1
-        rect = Rectangle((x1, y1), width, height, fill=False, color='red')
+        rect = Rectangle((x1, y1), width, height, fill=False, color='green')
         ax.add_patch(rect)
         # label = "%s (%.3f)" % (v_labels[i], v_scores[i])
         # plt.text(x1, y1, label, color='white')
@@ -176,8 +176,8 @@ def draw_boxes(filename, v_boxes, v_labels, v_scores):
         for id2 in range(id+1,len(p)):
             # plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]])
             # print((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2,1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3]),sep=" ")
-            if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
-                plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
+            if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=2*(min(p[id][2],p[id2][2])**2)/(max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])**2)):
+                plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"r")
                 # print("222222222222")   
     # plt.show()
     plt.savefig(os.path.join(BASE_DIR,"files/ans.jpg"))
@@ -246,7 +246,8 @@ def get_img_from_fig(fig, dpi=180):
     return img
 
 def draw_boxesv(frame, v_boxes, v_labels, v_scores,outvdo):
-    # data = plt.imread(filename)
+    frame =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = Image.fromarray(frame)    
     plt.imshow(frame)
     ax = plt.gca()
     p=[]
@@ -254,18 +255,18 @@ def draw_boxesv(frame, v_boxes, v_labels, v_scores,outvdo):
         box = v_boxes[i]
         y1, x1, y2, x2 = box.ymin, box.xmin, box.ymax, box.xmax
         width, height = x2 - x1, y2 - y1
-        rect = Rectangle((x1, y1), width, height, fill=False, color='red')
+        rect = Rectangle((x1, y1), width, height, fill=False, color='green')
         ax.add_patch(rect)
         # label = "%s (%.3f)" % (v_labels[i], v_scores[i])
         # plt.text(x1, y1, label, color='white')
     #     if(v_labels[i]=="person"):
     #         p.append([(x1+x2)/2,(y1+y2)/2,x2-x1,y2-y1])
-    # for id in range(len(p)):
-    #     for id2 in range(id+1,len(p)):
-    #         # plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]])
-    #         # print((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2,1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3]),sep=" ")
-    #         if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
-    #             plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
+    for id in range(len(p)):
+        for id2 in range(id+1,len(p)):
+            # plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]])
+            # print((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2,1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3]),sep=" ")
+            if((p[id][0]-p[id2][0])**2+(p[id][1]-p[id2][1])**2<=1.6*(min(p[id][2],p[id2][2])**2)/max(p[id][3]/p[id2][3],p[id2][3]/p[id][3])):
+                plt.plot([p[id][0],p[id2][0]],[p[id][1],p[id2][1]],"g")
     #             print("222222222222")   
     plt.savefig(os.path.join(BASE_DIR,"files/ff")+"/file%02d.png" % outvdo)
     plt.close()
@@ -312,7 +313,7 @@ def handle_vid(v):
                     print(i)
             else:
                 break
-            if(i==50):  #sonnand ga ikkada chudu, idid number of frames limit petesa
+            if(i==30):  #sonnand ga ikkada chudu, idid number of frames limit petesa
                 break  
     fs.delete(name)
     cap.release()
@@ -350,14 +351,14 @@ def upload_vid(request):
 def upload_file(request):
     if request.method == 'POST':
         form = FileForm(request.POST,request.FILES)
-        for k,v in request.POST.items():
-            print(k)
-            print(v)
-        print(request.POST)
-        print(request.POST.get('title'))
-        print(request.FILES)
+        # for k,v in request.POST.items():
+        #     print(k)
+        #     print(v)
+        # print(request.POST)
+        # print(request.POST.get('title'))
+        # print(request.FILES)
         if form.is_valid():
-            print("OKKKKK")
+            # print("OKKKKK")
             handle_uploaded_file(request.FILES['file'])
             # form.save()
             return redirect('files')
