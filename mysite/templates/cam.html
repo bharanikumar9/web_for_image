@@ -5,7 +5,7 @@
 
 {% block Content %}
 
-  <h2 class="card-title">Upload From Camera</h2>
+  <h2 class="text-center">Upload From Camera</h2>
   <form method="POST" enctype="multipart/form-data">
     <!-- {{ form.as_p }} -->
     {% csrf_token %}
@@ -39,6 +39,7 @@
     image_format: 'jpeg',
     jpeg_quality: 90
     });
+    // print("HEYY THEFREEEE")
     Webcam.attach( '#my_camera' );
     }
     // A button for taking snaps
@@ -70,6 +71,6 @@
 
     }
     </script>
-    <button type="submit" class="btn btn-primary" value="submit">Upload</button>
+    <button type="submit" class="btn btn-success" value="submit">Upload</button>
   </form>
 {% endblock %}
